@@ -1,8 +1,19 @@
+import {Routes, Route} from 'react-router-dom'
+import { Home } from './components/Home';
+import { Login } from './components/Login';
+import { Register } from './components/Register';
+import {AuthProvider} from './context/authContext';
+
  function App(){
   return (
-    <h1 className="text-3xl font-bold underline">
-      Hello world!
-    </h1>
+    <AuthProvider>    
+    <Routes>       
+     
+      <Route path ="/login" element ={<Login/>} />
+      <Route path ="/register" element ={<Register/>} />
+      <Route path ="/" element ={<Home/>} />
+    </Routes>
+    </AuthProvider>
   )
 }
 
