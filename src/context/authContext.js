@@ -1,6 +1,7 @@
 import { createContext, useContext, useState } from "react";
 import {createUserWithEmailAndPassword,signInWithEmailAndPassword,onAuthStateChanged,signOut} from 'firebase/auth'
-import {auth} from '../firebase';
+import {auth,db} from '../firebase';
+import { addDoc, collection } from "firebase/firestore"; 
 import { useNavigate } from "react-router-dom";
 
 
@@ -18,15 +19,28 @@ export const useAuth = ()=> {
 
 
 export function AuthProvider ({children}) {
+//objeto que recibe los datos digitados por el usuario
+const dataUsers = {
+    email: '',
+    password: '',
+    nombre: '',
+    apellido: '',
+    emailConfirm: '',
+    passwordConfirm: '',
+    departamento: '',
+    ciudad: '',
+    codigoPostal: ''
+};
 
-    const [user,setUser] = useState({
-        email: '',
-        password: '',
-    });
+
+// variable user que guarda los datos digitador por el usuario
+//tambien tiene su metodo setUser para actualizar el input con el name correspondiente
+    const [user,setUser] = useState(dataUsers);
 
     //handlechange se activa cuando el usuario empieza a escribir en los inputs especificados
     //detecta los cambios en los input, toma los valores del  name y value del evento submit del formulario, luego mediante el setUser se envia todos los valores mediante el name de los input y que tambien fueron definidos  en useState y extrae sus valores
     //el ...user sirve para en caso de que el input ya tenga algo escrito por el usuario sea detectado y siga modificiandose desde ese punto
+    //el input con el name correspondiente va a tomar el valor que digite el usuario
     const handleChange = ({target: {name,value}}) => {
         setUser({...user, [name]: value})
     };
@@ -39,7 +53,9 @@ export function AuthProvider ({children}) {
     const handleSubmit = async (e) => {
         e.preventDefault()
         try {
-          await  signup(user.email, user.password)
+            
+            await signup(user.email, user.password)
+             await saveFirestore(user.email,user.emailConfirm,user.password,user.passwordConfirm,user.nombre,user.apellido,user.departamento,user.ciudad,user.codigoPostal)
             navigate('/')
         } catch (error) {
             console.log(error);
@@ -50,7 +66,8 @@ export function AuthProvider ({children}) {
     const handleSubmitLogin = async (e) => {
         e.preventDefault()
         try {
-          await  login(user.email, user.password)
+          await  
+          login(user.email, user.password)          
             navigate('/')
         } catch (error) {
             console.log(error);
@@ -63,10 +80,25 @@ export function AuthProvider ({children}) {
     //funcion firebase para registrar usuario nuevo
     //createUserWithEmailAndPassword recibe el auth proveniente del archivo firebase.js
     //tambien recibe el email y la contraseña  provenientes del archivo Register.js
-    const signup = (email, password) => {
-        createUserWithEmailAndPassword(auth, email, password);
-    };
+    const signup =  (email, password) => createUserWithEmailAndPassword(auth, email, password);
+    
 
+    const saveFirestore =  (email,emailConfirm,password,passwordConfirm,nombre,apellido,departamento,ciudad,codigoPostal) => addDoc (collection(db,'dbUsers'),
+    {
+        email,
+        emailConfirm,
+        password,
+        passwordConfirm,
+        nombre,
+        apellido,
+        departamento,
+        ciudad,
+        codigoPostal
+
+    });
+    
+
+//objeto que contiene las distintas funciones y variables
     const data = {
         user,
         signup,
