@@ -1,8 +1,9 @@
-import { createContext, useContext, useState } from "react";
+import {createContext, useContext, useEffect, useState } from "react";
 import {createUserWithEmailAndPassword,signInWithEmailAndPassword,onAuthStateChanged,signOut} from 'firebase/auth'
 import {auth,db} from '../firebase';
-import { addDoc, collection } from "firebase/firestore"; 
+import { addDoc, collection, deleteDoc, doc, getDocs, onSnapshot, QuerySnapshot } from "firebase/firestore"; 
 import { useNavigate } from "react-router-dom";
+
 
 
 //todos los componentes React reciben la propiedad children por defecto
@@ -19,6 +20,10 @@ export const useAuth = ()=> {
 
 
 export function AuthProvider ({children}) {
+
+//variable que va contener el estado inicial puesto que al cargarse la aplicacion esta va buscar un usuario gracias a la funcion useEfect designada para dicha accion , pero como la respuesta de firebase aun no ha llegado esto provocara un error ya que va intentar leer datos que aun no existen
+const [loading, setLoading] = useState(true);
+
 //objeto que recibe los datos digitados por el usuario
 const dataUsers = {
     email: '',
@@ -32,6 +37,23 @@ const dataUsers = {
     codigoPostal: ''
 };
 
+const dataArticles = {
+    title: '',
+    firstAutor: '',
+    secondAutor: '',
+    thirdAutor: '',
+    firstKeyWord: '',
+    secondKeyWord: '',
+    thirdKeyWord: '',
+    
+};
+
+
+
+const [saveArticles,setSaveArticles] = useState([]);
+
+const [Articles, setArticles] = useState(dataArticles);
+
 
 // variable user que guarda los datos digitador por el usuario
 //tambien tiene su metodo setUser para actualizar el input con el name correspondiente
@@ -43,6 +65,12 @@ const dataUsers = {
     //el input con el name correspondiente va a tomar el valor que digite el usuario
     const handleChange = ({target: {name,value}}) => {
         setUser({...user, [name]: value})
+    };
+
+
+    //va detectar los cambios en los inputs del registro de articulos
+    const handleChangeArticles = ({target: {name,value}}) => {
+        setArticles({...Articles, [name]: value})
     };
 
     const navigate = useNavigate();
@@ -62,6 +90,18 @@ const dataUsers = {
         }
         
     }
+        //handle que va ejecutar la funcion para enviar a la base de datos los articulos
+    const handleSubmitArticles = async (e) => {
+        e.preventDefault()
+        try {
+           await saveFirestoreArticles(Articles.title,Articles.firstAutor,Articles.secondAutor,Articles.thirdAutor,Articles.firstKeyWord,Articles.secondKeyWord,Articles.thirdKeyWord)   
+           
+        } catch (error) {
+            console.log(error);
+        }
+        
+    }
+
 
     const handleSubmitLogin = async (e) => {
         e.preventDefault()
@@ -75,6 +115,18 @@ const dataUsers = {
         
     }
 
+
+    
+
+    // handle que se ejecutar la funcion logout
+    const handleLogout = async () => {
+        await logout();
+        navigate('/login');
+    }
+
+    //variable que almacena que usuario se registro o logueo
+    const [userSesion, setUserSesion] =useState()
+
     const login = (email, password) =>  signInWithEmailAndPassword(auth, email, password);
 
     //funcion firebase para registrar usuario nuevo
@@ -82,7 +134,66 @@ const dataUsers = {
     //tambien recibe el email y la contraseña  provenientes del archivo Register.js
     const signup =  (email, password) => createUserWithEmailAndPassword(auth, email, password);
     
+    //funcion que me va permitir cerrar la cesion de firebase
+    const logout = () => signOut(auth);
 
+
+    const deleteArticles = async (id) => {
+        
+    if(window.confirm('Estas seguro de borrar este articulo')){
+        await deleteDoc(doc(db,"dbArticles",id))
+    }
+
+
+        
+    
+    
+    };
+    
+
+
+    const getArticles = async () => {
+        const querySnapshot = await getDocs(collection(db, "dbArticles"));
+        const docs = [];       
+        querySnapshot.forEach((doc) => {
+            docs.push({...doc.data(), id:doc.id});
+        });
+        setSaveArticles(docs);
+    }
+    
+    
+    
+
+
+    /* const getArticles = () => getDocs(collection(db,'dbArticles'))
+    onSnapshot(getArticles) */
+
+    //esto es como un constructor el cual carga apenas inicia la aplicacion
+    useEffect(() =>{
+            onAuthStateChanged(auth, currentUser => {
+                setUserSesion(currentUser);
+                setLoading(false);
+                getArticles();
+            })
+    }, [])
+
+
+
+    //funcion que me va guardar datos en firestore
+    const saveFirestoreArticles =  (title,firstAutor,secondAutor,thirdAutor,firstKeyWord,secondKeyWord,thirdKeyWord) => addDoc (collection(db,'dbArticles'),
+    {
+        title,
+        firstAutor,
+        secondAutor,
+        thirdAutor,
+        firstKeyWord,
+        secondKeyWord,
+        thirdKeyWord
+
+    });
+    
+
+    //funcion que me va guardar datos en firestore
     const saveFirestore =  (email,emailConfirm,password,passwordConfirm,nombre,apellido,departamento,ciudad,codigoPostal) => addDoc (collection(db,'dbUsers'),
     {
         email,
@@ -101,11 +212,21 @@ const dataUsers = {
 //objeto que contiene las distintas funciones y variables
     const data = {
         user,
+        userSesion,
+        loading,
+        saveArticles,
         signup,
         login,
         handleChange,
+        handleChangeArticles,
         handleSubmit,
-        handleSubmitLogin 
+        handleSubmitArticles,
+        handleSubmitLogin ,
+        handleLogout,
+        signOut,
+        deleteArticles
+        
+
     };
 
     
