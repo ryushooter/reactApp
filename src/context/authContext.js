@@ -1,7 +1,7 @@
 import {createContext, useContext, useEffect, useState } from "react";
 import {createUserWithEmailAndPassword,signInWithEmailAndPassword,onAuthStateChanged,signOut} from 'firebase/auth'
 import {auth,db} from '../firebase';
-import { addDoc, collection, deleteDoc, doc, getDocs, onSnapshot, QuerySnapshot } from "firebase/firestore"; 
+import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot, query, QuerySnapshot, setDoc, where } from "firebase/firestore"; 
 import { useNavigate } from "react-router-dom";
 
 
@@ -34,7 +34,8 @@ const dataUsers = {
     passwordConfirm: '',
     departamento: '',
     ciudad: '',
-    codigoPostal: ''
+    codigoPostal: '',
+    rol: 'Estudiante'
 };
 
 const dataArticles = {
@@ -53,6 +54,10 @@ const dataArticles = {
 const [saveArticles,setSaveArticles] = useState([]);
 
 const [Articles, setArticles] = useState(dataArticles);
+
+
+const [SaveSessionUser,setSessionUser] = useState();
+
 
 
 // variable user que guarda los datos digitador por el usuario
@@ -83,7 +88,7 @@ const [Articles, setArticles] = useState(dataArticles);
         try {
             
             await signup(user.email, user.password)
-             await saveFirestore(user.email,user.emailConfirm,user.password,user.passwordConfirm,user.nombre,user.apellido,user.departamento,user.ciudad,user.codigoPostal)
+             await saveFirestore(user.email,user.emailConfirm,user.password,user.passwordConfirm,user.nombre,user.apellido,user.departamento,user.ciudad,user.codigoPostal,user.rol)
             navigate('/')
         } catch (error) {
             console.log(error);
@@ -174,10 +179,39 @@ const [Articles, setArticles] = useState(dataArticles);
                 setUserSesion(currentUser);
                 setLoading(false);
                 getArticles();
+               
+               
+
+                
+
             })
     }, [])
 
+    
 
+    const returnUsers = async () => {
+    const docRef = doc(db, "dbUsers", userSesion.email);
+    const docSnap = await getDoc(docRef);
+    
+        
+
+    if (docSnap.exists()) {
+      console.log("Document data:", docSnap.data());
+      
+      
+    } else {
+      // doc.data() will be undefined in this case
+      console.log("No such document!");
+    }
+
+    setSessionUser(docSnap);
+    
+    }
+  
+
+    
+    
+    
 
     //funcion que me va guardar datos en firestore
     const saveFirestoreArticles =  (title,firstAutor,secondAutor,thirdAutor,firstKeyWord,secondKeyWord,thirdKeyWord) => addDoc (collection(db,'dbArticles'),
@@ -194,7 +228,7 @@ const [Articles, setArticles] = useState(dataArticles);
     
 
     //funcion que me va guardar datos en firestore
-    const saveFirestore =  (email,emailConfirm,password,passwordConfirm,nombre,apellido,departamento,ciudad,codigoPostal) => addDoc (collection(db,'dbUsers'),
+    const saveFirestore =  (email,emailConfirm,password,passwordConfirm,nombre,apellido,departamento,ciudad,codigoPostal,rol) =>  setDoc (doc(db,'dbUsers',email),
     {
         email,
         emailConfirm,
@@ -204,7 +238,8 @@ const [Articles, setArticles] = useState(dataArticles);
         apellido,
         departamento,
         ciudad,
-        codigoPostal
+        codigoPostal,
+        rol
 
     });
     
@@ -215,6 +250,7 @@ const [Articles, setArticles] = useState(dataArticles);
         userSesion,
         loading,
         saveArticles,
+        SaveSessionUser,
         signup,
         login,
         handleChange,

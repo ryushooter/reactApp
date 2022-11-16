@@ -7,16 +7,21 @@ import { Navbar } from "./Navbar";
 export function Articles() {
 
     const {handleChangeArticles,handleSubmitArticles,saveArticles} = useAuth()
+
+    
    
-    return     <body class="bg-gray-100 h-screen antialiased ">
+    return <body class="bg-gray-100 h-screen antialiased ">
    
-        <Navbar/ >
+
+        <Navbar/>
 
 {/*etiqueta apertura cierre tarjetas y sidebar */}  
-        <div class="py-6 md:max-w-5xl mx-auto flex mb-4 w-full ">
+        <div class="py-6 md:max-w-5xl mx-auto flex mb-4 w-full h-4/6 ">
         
-        {/*div que contiene todos los input  */}      
-    <aside class="mx-auto w-1/3  rounded shadow-lg h-96  bg-white overflow-scroll ">
+        {/*div que contiene todos los input  */}  
+
+    
+    <aside class="mx-auto w-1/3  rounded shadow-lg h-5/6  bg-white overflow-scroll ">
 
     {/*div que contiene el titulo */}      
  <div class="flex items-center justify-between px-5 py-4 bg-white">

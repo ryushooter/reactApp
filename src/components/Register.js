@@ -104,6 +104,8 @@ export function Register() {
       </label>
       <input className="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500" id="grid-zip" type="text" name="codigoPostal" placeholder="90210" onChange={handleChange}/>
     </div>
+
+    
     
   </div>
             <div className="text-center lg:text-left mt-5">
